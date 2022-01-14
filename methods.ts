@@ -191,7 +191,7 @@ export const delete_tag_admin_module_del = ( req: ILRequest, id: string, module:
 export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = null ): Promise<Tag[]> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== d2r_start get_tag_list ===*/
-		const domain = req.session.domain_code;
+		const domain = req?.session?.domain_code || 'default';
 		const [ filters, values ] = prepare_filters( 'tag', { domain, visible: true } ); // modules: { mode: 'm', val: module, name: 'modules' } } );
 		const tags = await collection_find_all( req.db, `FOR tag IN ${ COLL_TAGS } SORT tag.name ${ filters } RETURN tag`, values, TagKeys );
 
