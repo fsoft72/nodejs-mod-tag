@@ -22,107 +22,107 @@ export const init = ( liwe: ILiWE ) => {
 
 	console.log( "    - Tag " );
 
-	tag_db_init ( liwe );
+	tag_db_init( liwe );
 
 
-	app.post ( "/api/tag/admin/add", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
-		const { name, visible, ___errors } = typed_dict( req.fields, [
+	app.post( "/api/tag/admin/add", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+		const { name, visible, ___errors } = typed_dict( req.fields || req.body, [
 			{ name: "name", type: "string", required: true },
 			{ name: "visible", type: "boolean" }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Missing required fields: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return send_error( res, { message: `Missing required fields: ${ ___errors.join( ', ' ) }` } );
 
-		post_tag_admin_add ( req,name, visible,  ( err: ILError, tag: Tag ) => {
+		post_tag_admin_add( req, name, visible, ( err: ILError, tag: Tag ) => {
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
 		} );
 	} );
 
-	app.post ( "/api/tag/admin/list", ( req: ILRequest, res: ILResponse ) => {
-		
-		
-		post_tag_admin_list ( req, ( err: ILError, tags: Tag[] ) => {
+	app.post( "/api/tag/admin/list", ( req: ILRequest, res: ILResponse ) => {
+
+
+		post_tag_admin_list( req, ( err: ILError, tags: Tag[] ) => {
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tags } );
 		} );
 	} );
 
-	app.patch ( "/api/tag/admin/update", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
-		const { id, name, visible, ___errors } = typed_dict( req.fields, [
+	app.patch( "/api/tag/admin/update", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+		const { id, name, visible, ___errors } = typed_dict( req.fields || req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "name", type: "string" },
 			{ name: "visible", type: "boolean" }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Missing required fields: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return send_error( res, { message: `Missing required fields: ${ ___errors.join( ', ' ) }` } );
 
-		patch_tag_admin_update ( req,id, name, visible,  ( err: ILError, tag: Tag ) => {
+		patch_tag_admin_update( req, id, name, visible, ( err: ILError, tag: Tag ) => {
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
 		} );
 	} );
 
-	app.patch ( "/api/tag/admin/fields", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
-		const { id, data, ___errors } = typed_dict( req.fields, [
+	app.patch( "/api/tag/admin/fields", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+		const { id, data, ___errors } = typed_dict( req.fields || req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "data", type: "any", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Missing required fields: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return send_error( res, { message: `Missing required fields: ${ ___errors.join( ', ' ) }` } );
 
-		patch_tag_admin_fields ( req,id, data,  ( err: ILError, tag: Tag ) => {
+		patch_tag_admin_fields( req, id, data, ( err: ILError, tag: Tag ) => {
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
 		} );
 	} );
 
-	app.post ( "/api/tag/admin/module/add", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
-		const { id, module, ___errors } = typed_dict( req.fields, [
+	app.post( "/api/tag/admin/module/add", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+		const { id, module, ___errors } = typed_dict( req.fields || req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "module", type: "string", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Missing required fields: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return send_error( res, { message: `Missing required fields: ${ ___errors.join( ', ' ) }` } );
 
-		post_tag_admin_module_add ( req,id, module,  ( err: ILError, tag: Tag ) => {
+		post_tag_admin_module_add( req, id, module, ( err: ILError, tag: Tag ) => {
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
 		} );
 	} );
 
-	app.delete ( "/api/tag/admin/module/del", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
-		const { id, module, ___errors } = typed_dict( req.fields, [
+	app.delete( "/api/tag/admin/module/del", perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+		const { id, module, ___errors } = typed_dict( req.fields || req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "module", type: "string", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Missing required fields: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return send_error( res, { message: `Missing required fields: ${ ___errors.join( ', ' ) }` } );
 
-		delete_tag_admin_module_del ( req,id, module,  ( err: ILError, tag: Tag ) => {
+		delete_tag_admin_module_del( req, id, module, ( err: ILError, tag: Tag ) => {
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
 		} );
 	} );
 
-	app.get ( "/api/tag/list", ( req: ILRequest, res: ILResponse ) => {
+	app.get( "/api/tag/list", ( req: ILRequest, res: ILResponse ) => {
 		const { module, ___errors } = typed_dict( req.query as any, [
 			{ name: "module", type: "string" }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Missing required fields: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return send_error( res, { message: `Missing required fields: ${ ___errors.join( ', ' ) }` } );
 
-		get_tag_list ( req,module,  ( err: ILError, tags: Tag[] ) => {
+		get_tag_list( req, module, ( err: ILError, tags: Tag[] ) => {
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tags } );
 		} );
 	} );
 
-}
+};
