@@ -16,6 +16,7 @@ const COLL_TAGS = "tags";
 /*=== d2r_start __file_header === */
 import { list_add, list_del, set_attr } from '../../liwe/utils';
 import { perm_available } from '../../liwe/auth';
+import { system_domain_get_by_session } from '../system/methods';
 
 const tag_get = async ( name: string = null, id: string = null ): Promise<Tag> => {
 	const [ filters, values ] = prepare_filters( 'tag', { id, name } );
@@ -23,7 +24,8 @@ const tag_get = async ( name: string = null, id: string = null ): Promise<Tag> =
 };
 
 const tag_create = async ( req: ILRequest, name: string, modules: string[], visible: boolean ): Promise<Tag> => {
-	const domain = req.session.domain_code;
+	const sd = await system_domain_get_by_session( req );
+	const domain = sd.code;
 
 	if ( !modules ) modules = [ 'system' ];
 	name = name.toLowerCase();
