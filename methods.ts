@@ -222,7 +222,7 @@ export const tag_db_init = ( liwe: ILiWE, cback: LCback = null ): Promise<number
 			{ type: "persistent", fields: [ "count" ], unique: false },
 			{ type: "persistent", fields: [ "visible" ], unique: false },
 			{ type: "persistent", fields: [ "modules[*]" ], unique: false },
-		], false );
+		] );
 
 		/*=== d2r_start tag_db_init ===*/
 
