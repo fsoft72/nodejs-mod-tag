@@ -245,7 +245,9 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: object, module: st
 		const o: any = obj;
 		const is_tag_admin: boolean = perm_available( req.user, [ "tag.editor" ] );
 
-		if ( !tags.map ) tags = [ tags as any ];
+		if ( !tags ) return cback ? cback( null ) : resolve( true );
+
+		if ( !tags?.map ) tags = [ tags as any ];
 
 		if ( !module ) module = "";
 		module = module.toLowerCase();
