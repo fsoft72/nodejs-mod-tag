@@ -252,12 +252,15 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: object, module: st
 		if ( !module ) module = "";
 		module = module.toLowerCase();
 
+		// Filter tag names so there are no dupes in input
+		const _tags: Record<string, number> = {};
+		tags.map( ( tag: string ) => _tags[ tag.toLowerCase() ] = 1 );
+		const _tags2 = Object.keys( _tags );
+
 		// we are going to add new tags to object
 		// if the obj already has some tags, we keep them
 		const my_tags: string[] = o.tags ? o.tags : [];
-		await Promise.all( tags.map( async ( name ) => {
-			name = name.toLowerCase();
-
+		await Promise.all( _tags2.map( async ( name ) => {
 			// If the tag is already in the obj tags
 			// we can skip all the rest
 			if ( my_tags.indexOf( name ) != -1 ) return;
