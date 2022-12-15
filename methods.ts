@@ -244,9 +244,11 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: object, module: st
 	return new Promise( async ( resolve, reject ) => {
 		/*=== d2r_start tag_obj ===*/
 		const o: any = obj;
+		const err = { message: 'Invalid object or null object' };
 		const is_tag_admin: boolean = perm_available( req.user, [ "tag.editor" ] );
 
 		if ( !tags ) return cback ? cback( null ) : resolve( true );
+		if ( !obj ) return cback ? cback( err ) : reject( err );
 
 		if ( !tags?.map ) tags = [ tags as any ];
 
@@ -260,7 +262,7 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: object, module: st
 
 		// we are going to add new tags to object
 		// if the obj already has some tags, we keep them
-		const my_tags: string[] = o.tags ? o.tags : [];
+		const my_tags: string[] = o?.tags ? o.tags : [];
 		await Promise.all( _tags2.map( async ( name ) => {
 			// If the tag is already in the obj tags
 			// we can skip all the rest
