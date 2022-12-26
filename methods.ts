@@ -1,7 +1,6 @@
 
 import { ILRequest, ILResponse, LCback, ILiweConfig, ILError, ILiWE } from '../../liwe/types';
 import { mkid } from '../../liwe/utils';
-import { collection_add, collection_find_all, collection_find_one, collection_find_one_dict, collection_find_all_dict, collection_del_one_dict, collection_init, prepare_filters } from '../../liwe/arangodb';
 import { DocumentCollection } from 'arangojs/collection';
 
 import {
@@ -18,10 +17,12 @@ const COLL_TAGS = "tags";
 import { list_add, list_del, set_attr } from '../../liwe/utils';
 import { perm_available } from '../../liwe/auth';
 import { system_domain_get_by_session } from '../system/methods';
+import { adb_record_add, adb_find_all, adb_find_one, adb_query_all, adb_query_one, adb_prepare_filters } from '../../liwe/db/arango';
+import { collection_init } from '../../liwe/arangodb';
 
 const tag_get = async ( name: string = null, id: string = null ): Promise<Tag> => {
-	const [ filters, values ] = prepare_filters( 'tag', { id, name } );
-	return await collection_find_one( _liwe.db, `FOR tag IN ${ COLL_TAGS } ${ filters } RETURN tag`, values );
+	const [ filters, values ] = adb_prepare_filters( 'tag', { id, name } );
+	return await adb_query_one( _liwe.db, `FOR tag IN ${ COLL_TAGS } ${ filters } RETURN tag`, values );
 };
 
 const tag_create = async ( req: ILRequest, name: string, modules: string[], visible: boolean ): Promise<Tag> => {
@@ -33,7 +34,7 @@ const tag_create = async ( req: ILRequest, name: string, modules: string[], visi
 	const name_domain = `${ name }_${ domain }`;
 
 	let tag: Tag = { id: mkid( 'tag' ), name, modules, domain, name_domain, count: 0, visible };
-	tag = await collection_add( _coll_tags, tag );
+	tag = await adb_record_add( req.db, COLL_TAGS, tag );
 
 	return tag;
 };
@@ -68,7 +69,7 @@ export const post_tag_admin_add = ( req: ILRequest, name: string, visible: boole
 export const post_tag_admin_list = ( req: ILRequest, cback: LCback = null ): Promise<Tag[]> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== d2r_start post_tag_admin_list ===*/
-		const tags: Tag[] = await collection_find_all_dict( req.db, COLL_TAGS, {}, TagKeys );
+		const tags: Tag[] = await adb_find_all( req.db, COLL_TAGS, {}, TagKeys );
 
 		return cback ? cback( null, tags ) : resolve( tags );
 		/*=== d2r_end post_tag_admin_list ===*/
@@ -88,7 +89,7 @@ export const post_tag_admin_list = ( req: ILRequest, cback: LCback = null ): Pro
 export const patch_tag_admin_update = ( req: ILRequest, id: string, name?: string, visible?: boolean, cback: LCback = null ): Promise<Tag> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== d2r_start patch_tag_admin_update ===*/
-		let t: Tag = await collection_find_one_dict( req.db, COLL_TAGS, { id } );
+		let t: Tag = await adb_find_one( req.db, COLL_TAGS, { id } );
 		const err = { message: 'Tag not found' };
 
 		if ( !t ) return cback ? cback( err ) : reject( err );
@@ -97,7 +98,7 @@ export const patch_tag_admin_update = ( req: ILRequest, id: string, name?: strin
 		// if ( visible == t.visible ) return cback ? cback( null, t ) : resolve( t );
 
 		set_attr( t, 'visible', visible );
-		t = await collection_add( _coll_tags, t, null, TagKeys );
+		t = await adb_record_add( req.db, COLL_TAGS, t, TagKeys );
 
 		return cback ? cback( null, t ) : resolve( t );
 		/*=== d2r_end patch_tag_admin_update ===*/
@@ -116,7 +117,7 @@ export const patch_tag_admin_update = ( req: ILRequest, id: string, name?: strin
 export const patch_tag_admin_fields = ( req: ILRequest, id: string, data: any, cback: LCback = null ): Promise<Tag> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== d2r_start patch_tag_admin_fields ===*/
-		let t: Tag = await collection_find_one_dict( req.db, COLL_TAGS, { id } );
+		let t: Tag = await adb_find_one( req.db, COLL_TAGS, { id } );
 		const err = { message: 'Tag not found' };
 
 		if ( !t ) return cback ? cback( err ) : reject( err );
@@ -125,7 +126,7 @@ export const patch_tag_admin_fields = ( req: ILRequest, id: string, data: any, c
 		delete data.name;
 
 		t = { ...t, ...data };
-		t = await collection_add( _coll_tags, t, null, TagKeys );
+		t = await adb_record_add( req.db, COLL_TAGS, t, TagKeys );
 
 		return cback ? cback( null, t ) : resolve( t );
 		/*=== d2r_end patch_tag_admin_fields ===*/
@@ -151,7 +152,7 @@ export const post_tag_admin_module_add = ( req: ILRequest, id: string, module: s
 
 		tag.modules = list_add( tag.modules, module );
 
-		tag = await collection_add( _coll_tags, tag, false, TagKeys );
+		tag = await adb_record_add( req.db, COLL_TAGS, tag, TagKeys );
 
 		return cback ? cback( null, tag ) : resolve( tag );
 		/*=== d2r_end post_tag_admin_module_add ===*/
@@ -176,7 +177,7 @@ export const delete_tag_admin_module_del = ( req: ILRequest, id: string, module:
 
 		tag.modules = list_del( tag.modules, module );
 
-		tag = await collection_add( _coll_tags, tag, false, TagKeys );
+		tag = await adb_record_add( req.db, COLL_TAGS, tag, TagKeys );
 
 		return cback ? cback( null, tag ) : resolve( tag );
 		/*=== d2r_end delete_tag_admin_module_del ===*/
@@ -195,8 +196,8 @@ export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = n
 	return new Promise( async ( resolve, reject ) => {
 		/*=== d2r_start get_tag_list ===*/
 		const domain = req?.session?.domain_code || 'default';
-		const [ filters, values ] = prepare_filters( 'tag', { domain, visible: true } ); // modules: { mode: 'm', val: module, name: 'modules' } } );
-		const tags = await collection_find_all( req.db, `FOR tag IN ${ COLL_TAGS } SORT tag.name ${ filters } RETURN tag`, values, TagKeys );
+		const [ filters, values ] = adb_prepare_filters( 'tag', { domain, visible: true } ); // modules: { mode: 'm', val: module, name: 'modules' } } );
+		const tags = await adb_query_all( req.db, `FOR tag IN ${ COLL_TAGS } SORT tag.name ${ filters } RETURN tag`, values, TagKeys );
 
 		return cback ? cback( null, tags ) : resolve( tags );
 		/*=== d2r_end get_tag_list ===*/
@@ -279,7 +280,7 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: object, module: st
 				tag.modules.push( module );
 
 				// update the tag count on db
-				await collection_add( _coll_tags, tag );
+				await adb_record_add( req.db, COLL_TAGS, tag );
 			}
 
 			my_tags.push( name );
@@ -327,7 +328,7 @@ export const tag_del_obj = ( tags: string[], obj: object, module: string, cback:
 			if ( tag.count < 0 ) tag.count = 0;
 
 			// update the tag count on db
-			await collection_add( _coll_tags, tag );
+			await adb_record_add( _liwe.db, COLL_TAGS, tag );
 
 			my_tags.push( name );
 		} ) );
