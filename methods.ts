@@ -17,8 +17,7 @@ const COLL_TAGS = "tags";
 import { list_add, list_del, set_attr } from '../../liwe/utils';
 import { perm_available } from '../../liwe/auth';
 import { system_domain_get_by_session } from '../system/methods';
-import { adb_record_add, adb_find_all, adb_find_one, adb_query_all, adb_query_one, adb_prepare_filters } from '../../liwe/db/arango';
-import { collection_init } from '../../liwe/arangodb';
+import { adb_record_add, adb_find_all, adb_find_one, adb_query_all, adb_query_one, adb_prepare_filters, adb_collection_init } from '../../liwe/db/arango';
 
 const tag_get = async ( name: string = null, id: string = null ): Promise<Tag> => {
 	const [ filters, values ] = adb_prepare_filters( 'tag', { id, name } );
@@ -216,7 +215,7 @@ export const tag_db_init = ( liwe: ILiWE, cback: LCback = null ): Promise<number
 	return new Promise( async ( resolve, reject ) => {
 		_liwe = liwe;
 
-		_coll_tags = await collection_init( liwe.db, COLL_TAGS, [
+		_coll_tags = await adb_collection_init( liwe.db, COLL_TAGS, [
 			{ type: "persistent", fields: [ "id" ], unique: true },
 			{ type: "persistent", fields: [ "domain" ], unique: false },
 			{ type: "persistent", fields: [ "name" ], unique: false },
