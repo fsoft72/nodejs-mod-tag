@@ -3,7 +3,6 @@
 /*=== f2c_start __file ===*/
 
 /*=== f2c_end __file ===*/
-
 /** Tag */
 export interface Tag {
 	/** the main id field */
