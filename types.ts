@@ -6,13 +6,13 @@
 /** Tag */
 export interface Tag {
 	/** the main id field */
-	id?: string;
+	id: string;
 	/** The domain name */
 	domain?: string;
 	/** The tag name */
-	name?: string;
+	name: string;
 	/** The unique key tag <-> domain */
-	name_domain?: string;
+	name_domain: string;
 	/** Number of times this tag has been used */
 	count?: number;
 	/** If the tag is visible to the public */
