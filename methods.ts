@@ -326,7 +326,10 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: any, module: strin
 
 		// Filter tag names so there are no dupes in input
 		const _tags: Record<string, number> = {};
-		tags.map( ( tag: string ) => _tags[ tag.toLowerCase() ] = 1 );
+		tags.map( ( tag: string ) => {
+			if ( !tag ) return;
+			_tags[ tag.toString().toLowerCase() ] = 1;
+		} );
 		const _tags2 = Object.keys( _tags );
 
 		// we are going to add new tags to object
