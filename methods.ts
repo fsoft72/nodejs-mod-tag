@@ -24,7 +24,7 @@ const COLL_TAGS = "tags";
 const COLL_TAG_BINDINGS = "tag_bindings";
 
 /*=== f2c_start __file_header === */
-import { list_add, list_del, mkid, set_attr } from '../../liwe/utils';
+import { keys_valid, list_add, list_del, mkid, set_attr } from '../../liwe/utils';
 import { perm_available } from '../../liwe/auth';
 import { system_domain_get_by_session } from '../system/methods';
 import { adb_record_add, adb_find_all, adb_find_one, adb_query_all, adb_query_one, adb_prepare_filters, adb_collection_init, adb_del_one, adb_del_all } from '../../liwe/db/arango';
@@ -145,7 +145,8 @@ export const patch_tag_admin_update = ( req: ILRequest, id: string, name?: strin
 		// If nothing changed, why update the db?
 		// if ( visible == t.visible ) return cback ? cback( null, t ) : resolve( t );
 
-		set_attr( t, 'visible', visible );
+		t = { ...t, ...keys_valid( { name, visible } ) };
+
 		t = await adb_record_add( req.db, COLL_TAGS, t, TagKeys );
 
 		return cback ? cback( null, t ) : resolve( t );
@@ -342,7 +343,6 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: any, module: strin
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start tag_obj ===*/
 		const domain: SystemDomain = await system_domain_get_by_session( req );
-		const o: any = obj;
 		const err = { message: 'Invalid object or null object' };
 		const is_tag_admin: boolean = perm_available( req.user, [ "tag.editor" ] );
 
@@ -363,7 +363,7 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: any, module: strin
 		// tags to be added to the object
 		const my_tags: string[] = [];
 
-		await _tag_bind_del( req, null, o.id, module );
+		await _tag_bind_del( req, null, obj.id, module );
 
 		// we are going to add new tags to object
 		// if the obj already has some tags, we keep them
@@ -383,15 +383,15 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: any, module: strin
 				await adb_record_add( req.db, COLL_TAGS, tag );
 			}
 
-			await _tag_bind_add( req, tag.id, o.id, module );
+			await _tag_bind_add( req, tag.id, obj.id, module );
 
 			my_tags.push( name );
 		} ) );
 
 		// assign / overwrite the new tags to the object
-		o.tags = my_tags;
+		obj.tags = my_tags;
 
-		return cback ? cback( null, o ) : resolve( o );
+		return cback ? cback( null, obj ) : resolve( obj );
 		/*=== f2c_end tag_obj ===*/
 	} );
 };

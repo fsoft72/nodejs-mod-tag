@@ -54,7 +54,7 @@
             ]
         },
         {
-            "method": "GET",
+            "method": "POST",
             "url": "/api/tag/admin/module/add",
             "auth": true,
             "params": {
@@ -99,17 +99,17 @@
             "tests": [
                 {
                     "field": "tags[0].name",
-                    "value": "test-tag02"
+                    "value": "test-tag"
                 },
                 {
                     "mode": "LEN",
                     "field": "tags",
-                    "value": 1
+                    "value": 2
                 }
             ]
         },
         {
-            "method": "GET",
+            "method": "PATCH",
             "url": "/api/tag/admin/update",
             "auth": true,
             "params": {
@@ -126,7 +126,7 @@
             ]
         },
         {
-            "method": "GET",
+            "method": "DELETE",
             "url": "/api/tag/admin/module/del",
             "auth": true,
             "params": {
@@ -142,43 +142,6 @@
                 {
                     "field": "tag.modules[0]",
                     "value": "system"
-                }
-            ]
-        },
-        {
-            "method": "GET",
-            "url": "/api/tag/bind/add",
-            "auth": false,
-            "params": {
-                "id_tag": "%(id_tag_01)s",
-                "id_obj": "fake-id0000",
-                "module": "test-module"
-            },
-            "status": 200
-        },
-        {
-            "method": "GET",
-            "url": "/api/tag/bind/del",
-            "auth": false,
-            "params": {
-                "id_tag": "%(id_tag_01)s",
-                "id_obj": "fake-id0000",
-                "module": "test-module"
-            },
-            "status": 200
-        },
-        {
-            "method": "GET",
-            "url": "/api/tag/admin/del",
-            "auth": true,
-            "params": {
-                "id": "%(id_tag_01)s"
-            },
-            "tests": [
-                {
-                    "field": "tag",
-                    "mode": "LEN",
-                    "value": 0
                 }
             ]
         }

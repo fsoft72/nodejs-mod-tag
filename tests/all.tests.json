@@ -13,6 +13,11 @@
             "action": "include",
             "filename": "01-tag.json",
             "exec": true
+        },
+        {
+            "action": "include",
+            "filename": "02-bind.json",
+            "exec": true
         }
     ]
 }
