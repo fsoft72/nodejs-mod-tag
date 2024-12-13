@@ -50,3 +50,19 @@ export const TagBindKeys = {
 	'module': { type: 'string', priv: false },
 };
 
+/** TagSearchResult */
+export interface TagSearchResult {
+	/** The tag name */
+	tag: string[];
+	/** The id_obj */
+	id_obj: string;
+	/** The module */
+	module: string;
+}
+
+export const TagSearchResultKeys = {
+	'tag': { type: 'string[]', priv: false },
+	'id_obj': { type: 'string', priv: false },
+	'module': { type: 'string', priv: false },
+};
+

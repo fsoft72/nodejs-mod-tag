@@ -8,7 +8,8 @@ import { $l } from '../../liwe/locale';
 import { system_permissions_register } from '../system/methods';
 
 import {
-	Tag, TagBind, TagBindKeys, TagKeys,
+	Tag, TagBind, TagBindKeys, TagKeys, TagSearchResult,
+	TagSearchResultKeys,
 } from './types';
 
 import _module_perms from './perms';
@@ -26,11 +27,11 @@ const COLL_TAG_BINDINGS = "tag_bindings";
 import { list_add, list_del, mkid, set_attr } from '../../liwe/utils';
 import { perm_available } from '../../liwe/auth';
 import { system_domain_get_by_session } from '../system/methods';
-import { adb_record_add, adb_find_all, adb_find_one, adb_query_all, adb_query_one, adb_prepare_filters, adb_collection_init, adb_del_one } from '../../liwe/db/arango';
+import { adb_record_add, adb_find_all, adb_find_one, adb_query_all, adb_query_one, adb_prepare_filters, adb_collection_init, adb_del_one, adb_del_all } from '../../liwe/db/arango';
+import { SystemDomain } from '../system/types';
 
-const tag_get = async ( name: string = null, id: string = null ): Promise<Tag> => {
-	const [ filters, values ] = adb_prepare_filters( 'tag', { id, name } );
-	return await adb_query_one( _liwe.db, `FOR tag IN ${ COLL_TAGS } ${ filters } RETURN tag`, values );
+const _tag_get = async ( req: ILRequest, domain: string, name?: string, id?: string ): Promise<Tag> => {
+	return adb_find_one( req.db, COLL_TAGS, { domain, name, id } );
 };
 
 const tag_create = async ( req: ILRequest, name: string, modules: string[], visible: boolean ): Promise<Tag> => {
@@ -47,18 +48,8 @@ const tag_create = async ( req: ILRequest, name: string, modules: string[], visi
 	return tag;
 };
 
-/**
- *
- * @param id_tag -  [req]
- * @param id_obj -  [req]
- * @param module -  [req]
- *
- * @return OK: boolean
- *
- */
 const _tag_bind_add = ( req: ILRequest, id_tag: string, id_obj: string, module: string, cback: LCback = null ): Promise<boolean> => {
 	return new Promise( async ( resolve, reject ) => {
-		/*=== f2c_start post_tag_bind_add ===*/
 		const domain = await system_domain_get_by_session( req );
 		const err: ILError = { message: 'Invalid tag or object' };
 		const bindExists = await adb_find_one( req.db, COLL_TAG_BINDINGS, { id_tag, id_obj, module, domain: domain.code } );
@@ -71,28 +62,14 @@ const _tag_bind_add = ( req: ILRequest, id_tag: string, id_obj: string, module: 
 		if ( !res ) return cback ? cback( err ) : reject( err );
 
 		return cback ? cback( null, true ) : resolve( true );
-		/*=== f2c_end post_tag_bind_add ===*/
 	} );
 };
 
-/**
- *
- * @param id - Binding record id [opt]
- * @param id_tag -  [opt]
- * @param id_obj -  [opt]
- * @param module -  [opt]
- *
- * @return OK: boolean
- *
- */
 const _tag_bind_del = ( req: ILRequest, id_tag: string, id_obj: string, module: string, cback: LCback = null ): Promise<boolean> => {
 	return new Promise( async ( resolve, reject ) => {
-		/*=== f2c_start delete_tag_bind_del ===*/
-
-		const res = await adb_del_one( req.db, COLL_TAG_BINDINGS, { id_tag, id_obj, module } );
+		const res = await adb_del_all( req.db, COLL_TAG_BINDINGS, { id_tag, id_obj, module } );
 
 		return cback ? cback( null, true ) : resolve( true );
-		/*=== f2c_end delete_tag_bind_del ===*/
 	} );
 };
 /*=== f2c_end __file_header ===*/
@@ -159,7 +136,8 @@ export const post_tag_admin_list = ( req: ILRequest, cback: LCback = null ): Pro
 export const patch_tag_admin_update = ( req: ILRequest, id: string, name?: string, visible?: boolean, cback: LCback = null ): Promise<Tag> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start patch_tag_admin_update ===*/
-		let t: Tag = await adb_find_one( req.db, COLL_TAGS, { id } );
+		const domain: SystemDomain = await system_domain_get_by_session( req );
+		let t: Tag = await adb_find_one( req.db, COLL_TAGS, { id, domain: domain.code } );
 		const err = { message: 'Tag not found' };
 
 		if ( !t ) return cback ? cback( err ) : reject( err );
@@ -191,7 +169,8 @@ export const patch_tag_admin_update = ( req: ILRequest, id: string, name?: strin
 export const patch_tag_admin_fields = ( req: ILRequest, id: string, data: any, cback: LCback = null ): Promise<Tag> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start patch_tag_admin_fields ===*/
-		let t: Tag = await adb_find_one( req.db, COLL_TAGS, { id } );
+		const domain: SystemDomain = await system_domain_get_by_session( req );
+		let t: Tag = await adb_find_one( req.db, COLL_TAGS, { id, domain: domain.code } );
 		const err = { message: 'Tag not found' };
 
 		if ( !t ) return cback ? cback( err ) : reject( err );
@@ -222,8 +201,9 @@ export const patch_tag_admin_fields = ( req: ILRequest, id: string, data: any, c
 export const post_tag_admin_module_add = ( req: ILRequest, id: string, module: string, cback: LCback = null ): Promise<Tag> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start post_tag_admin_module_add ===*/
+		const domain: SystemDomain = await system_domain_get_by_session( req );
 		const err = { message: 'Tag not found' };
-		let tag: Tag = await tag_get( null, id );
+		let tag: Tag = await _tag_get( req, domain.code, null, id );
 
 		if ( !tag ) return cback ? cback( err ) : reject( err );
 
@@ -251,8 +231,9 @@ export const post_tag_admin_module_add = ( req: ILRequest, id: string, module: s
 export const delete_tag_admin_module_del = ( req: ILRequest, id: string, module: string, cback: LCback = null ): Promise<Tag> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start delete_tag_admin_module_del ===*/
+		const domain: SystemDomain = await system_domain_get_by_session( req );
 		const err = { message: 'Tag not found' };
-		let tag: Tag = await tag_get( null, id );
+		let tag: Tag = await _tag_get( req, domain.code, null, id );
 		if ( !tag ) return cback ? cback( err ) : reject( err );
 
 		tag.modules = list_del( tag.modules, module );
@@ -281,7 +262,7 @@ export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = n
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start get_tag_list ===*/
 		const domain = await system_domain_get_by_session( req );
-		const [ filters, values ] = adb_prepare_filters( 'tag', { domain, visible: true } ); // modules: { mode: 'm', val: module, name: 'modules' } } );
+		const [ filters, values ] = adb_prepare_filters( 'tag', { domain: domain.code, visible: true } ); // modules: { mode: 'm', val: module, name: 'modules' } } );
 		const tags = await adb_query_all( req.db, `FOR tag IN ${ COLL_TAGS } SORT tag.name ${ filters } RETURN tag`, values, TagKeys );
 
 		return cback ? cback( null, tags ) : resolve( tags );
@@ -290,90 +271,54 @@ export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = n
 };
 // }}}
 
-
-// {{{ get_tag_bind_list ( req: ILRequest, id_obj: string, module: string, cback: LCBack = null ): Promise<Tag[]>
+// {{{ get_tag_search ( req: ILRequest, tags: string[], module?: string, cback: LCBack = null ): Promise<TagSearchResult[]>
 /**
  *
- * @param id_obj -  [req]
- * @param module -  [req]
+ * @param tags - List of tags to search [req]
+ * @param module - Optional module [opt]
  *
- * @return tags: Tag
- *
- */
-export const get_tag_bind_list = ( req: ILRequest, id_obj: string, module: string, cback: LCback = null ): Promise<Tag[]> => {
-	return new Promise( async ( resolve, reject ) => {
-		/*=== f2c_start get_tag_bind_list ===*/
-		const err: ILError = { message: 'Error retrieving tags' };
-		const domain = await system_domain_get_by_session( req );
-		const query: string = `
-			FOR bind IN @coll_bind
-				FILTER bind.id_obj == @id_obj AND bind.module == @module AND bind.domain == @domain
-				FOR tag IN @coll_tags
-					FILTER tag.id == bind.id_tag
-					RETURN tag
-			`;
-
-		const tags = await adb_query_all( req.db, query, { id_obj, module, domain: domain.code, coll_bind: COLL_TAG_BINDINGS, coll_tags: COLL_TAGS }, TagKeys );
-
-		if ( !tags ) return cback ? cback( err ) : reject( err );
-
-		return cback ? cback( null, tags ) : resolve( tags );
-
-		/*=== f2c_end get_tag_bind_list ===*/
-	} );
-};
-// }}}
-
-// {{{ tag_del_obj ( tags: string[], obj: string, module: string, cback: LCBack = null ): Promise<any>
-/**
- *
- * This function tags an object in the system.
- * The given `tags` must already exist.
- * If one or more tag in `tags` do not exist, they will simply be skipped with no warning.
- *
- * @param tags - A list of tags [req]
- * @param obj - The object to tag [req]
- * @param module - The module of id_obj [req]
- *
- * @return : any
+ * @return objs: TagSearchResult
  *
  */
-export const tag_del_obj = ( tags: string[], obj: string, module: string, cback: LCback = null ): Promise<any> => {
+export const get_tag_search = ( req: ILRequest, tags: string[], module?: string, cback: LCback = null ): Promise<TagSearchResult[]> => {
 	return new Promise( async ( resolve, reject ) => {
-		/*=== f2c_start tag_del_obj ===*/
-		const o: any = obj;
+		/*=== f2c_start get_tag_search ===*/
+		const domain: SystemDomain = await system_domain_get_by_session( req );
 
-		// we are going to add new tags to object
-		// if the obj already has some tags, we keep them
-		const my_tags: string[] = o.tags ? o.tags : [];
-		await Promise.all( tags.map( async ( name ) => {
-			name = name.toLowerCase();
-			const pos = my_tags.indexOf( name );
+		// gets all tags structure from db
+		const _tags: Tag[] = await adb_find_all( req.db, COLL_TAGS, {
+			name: {
+				mode: 'in',
+				val: tags.map( ( t: string ) => t.toLowerCase() ),
+				name: 'name'
+			},
+			domain: domain.code
+		} );
 
-			// If the tag does not exists on my_tags
-			// we simply skip it
-			if ( pos == -1 ) return;
+		const _tag_by_id: Record<string, Tag> = {};
+		_tags.map( ( t: Tag ) => _tag_by_id[ t.id ] = t );
 
-			// Remove elem at 'pos' from object tags
-			my_tags.splice( pos, 1 );
+		// search for all objects that have all the tags
+		const objs = await adb_find_all( req.db, COLL_TAG_BINDINGS, {
+			id_tag: {
+				mode: 'in',
+				val: _tags.map( ( t: Tag ) => t.id ),
+				name: 'id_tag'
+			},
+			module
+		} );
 
-			const tag = await tag_get( name );
-			if ( !tag ) return null;
+		const objs_by_id: Record<string, TagSearchResult> = {};
+		objs.map( ( o: TagBind ) => {
+			if ( !objs_by_id[ o.id_obj ] ) objs_by_id[ o.id_obj ] = { id_obj: o.id_obj, tag: [], module: o.module };
 
-			tag.count -= 1;
-			if ( tag.count < 0 ) tag.count = 0;
+			objs_by_id[ o.id_obj ].tag.push( _tag_by_id[ o.id_tag ].name );
+		} );
 
-			// update the tag count on db
-			await adb_record_add( _liwe.db, COLL_TAGS, tag );
+		const values = Object.values( objs_by_id );
 
-			my_tags.push( name );
-		} ) );
-
-		// assign / overwrite the new tags to the object
-		o.tags = my_tags;
-
-		return cback ? cback( null, o ) : resolve( o );
-		/*=== f2c_end tag_del_obj ===*/
+		return cback ? cback( null, values ) : resolve( values );
+		/*=== f2c_end get_tag_search ===*/
 	} );
 };
 // }}}
@@ -396,6 +341,7 @@ export const tag_del_obj = ( tags: string[], obj: string, module: string, cback:
 export const tag_obj = ( req: ILRequest, tags: string[], obj: any, module: string, cback: LCback = null ): Promise<any> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start tag_obj ===*/
+		const domain: SystemDomain = await system_domain_get_by_session( req );
 		const o: any = obj;
 		const err = { message: 'Invalid object or null object' };
 		const is_tag_admin: boolean = perm_available( req.user, [ "tag.editor" ] );
@@ -409,22 +355,21 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: any, module: strin
 		module = module.toLowerCase();
 
 		// Filter tag names so there are no dupes in input
-		const _tags: Record<string, number> = {};
-		tags.map( ( tag: string ) => {
-			if ( !tag ) return;
-			_tags[ tag.toString().toLowerCase() ] = 1;
-		} );
-		const _tags2 = Object.keys( _tags );
+		let _tags = tags.filter( ( tag: string, index: number, self: string[] ) => self.indexOf( tag ) === index );
+
+		// all tags must be lowercase
+		_tags = _tags.map( ( t: string ) => t.toLowerCase() );
+
+		// tags to be added to the object
+		const my_tags: string[] = [];
+
+		await _tag_bind_del( req, null, o.id, module );
 
 		// we are going to add new tags to object
 		// if the obj already has some tags, we keep them
-		const my_tags: string[] = o?.tags ? o.tags : [];
-		await Promise.all( _tags2.map( async ( name ): Promise<void> => {
-			// If the tag is already in the obj tags
-			// we can skip all the rest
-			if ( my_tags.indexOf( name ) != -1 ) return;
+		await Promise.all( _tags.map( async ( name ): Promise<void> => {
+			let tag: Tag = await _tag_get( req, domain.code, name );
 
-			let tag = await tag_get( name );
 			if ( !tag && is_tag_admin )
 				tag = await tag_create( req, name, [ "system" ], true );
 
@@ -437,6 +382,8 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: any, module: strin
 				// update the tag count on db
 				await adb_record_add( req.db, COLL_TAGS, tag );
 			}
+
+			await _tag_bind_add( req, tag.id, o.id, module );
 
 			my_tags.push( name );
 		} ) );
