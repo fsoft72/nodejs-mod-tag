@@ -11,14 +11,14 @@ import { perms } from '../../liwe/auth';
 
 import {
 	// endpoints function
-	delete_tag_admin_module_del, get_tag_list, patch_tag_admin_fields, patch_tag_admin_update, post_tag_admin_add,
-	post_tag_admin_list, post_tag_admin_module_add,
+	delete_tag_admin_module_del, delete_tag_bind_del, get_tag_bind_list, get_tag_list, patch_tag_admin_fields,
+	patch_tag_admin_update, post_tag_admin_add, post_tag_admin_list, post_tag_admin_module_add, post_tag_bind_add,
 	// functions
 	tag_db_init, tag_del_obj, tag_obj,
 } from './methods';
 
 import {
-	Tag, TagKeys,
+	Tag, TagBind, TagBindKeys, TagKeys,
 } from './types';
 
 /*=== f2c_start __header ===*/
@@ -42,6 +42,7 @@ export const init = ( liwe: ILiWE ) => {
 		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
 		post_tag_admin_add ( req, name, visible, ( err: ILError, tag: Tag ) => {
+			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
@@ -52,6 +53,7 @@ export const init = ( liwe: ILiWE ) => {
 		
 
 		post_tag_admin_list ( req, ( err: ILError, tags: Tag ) => {
+			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tags } );
@@ -68,6 +70,7 @@ export const init = ( liwe: ILiWE ) => {
 		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
 		patch_tag_admin_update ( req, id, name, visible, ( err: ILError, tag: Tag ) => {
+			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
@@ -83,6 +86,7 @@ export const init = ( liwe: ILiWE ) => {
 		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
 		patch_tag_admin_fields ( req, id, data, ( err: ILError, tag: Tag ) => {
+			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
@@ -98,6 +102,7 @@ export const init = ( liwe: ILiWE ) => {
 		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
 		post_tag_admin_module_add ( req, id, module, ( err: ILError, tag: Tag ) => {
+			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
@@ -113,6 +118,7 @@ export const init = ( liwe: ILiWE ) => {
 		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
 		delete_tag_admin_module_del ( req, id, module, ( err: ILError, tag: Tag ) => {
+			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tag } );
@@ -127,6 +133,58 @@ export const init = ( liwe: ILiWE ) => {
 		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
 		get_tag_list ( req, module, ( err: ILError, tags: Tag ) => {
+			if ( err?.quiet ) return;
+			if ( err ) return send_error( res, err );
+
+			send_ok( res, { tags } );
+		} );
+	} );
+
+	app.post ( '/api/tag/bind/add', ( req: ILRequest, res: ILResponse ) => {
+		const { id_tag, id_obj, module, ___errors } = typed_dict( req.body, [
+			{ name: "id_tag", type: "string", required: true },
+			{ name: "id_obj", type: "string", required: true },
+			{ name: "module", type: "string", required: true }
+		] );
+
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+
+		post_tag_bind_add ( req, id_tag, id_obj, module, ( err: ILError, OK: boolean ) => {
+			if ( err?.quiet ) return;
+			if ( err ) return send_error( res, err );
+
+			send_ok( res, { OK } );
+		} );
+	} );
+
+	app.delete ( '/api/tag/bind/del', ( req: ILRequest, res: ILResponse ) => {
+		const { id, id_tag, id_obj, module, ___errors } = typed_dict( req.body, [
+			{ name: "id", type: "string" },
+			{ name: "id_tag", type: "string" },
+			{ name: "id_obj", type: "string" },
+			{ name: "module", type: "string" }
+		] );
+
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+
+		delete_tag_bind_del ( req, id, id_tag, id_obj, module, ( err: ILError, OK: boolean ) => {
+			if ( err?.quiet ) return;
+			if ( err ) return send_error( res, err );
+
+			send_ok( res, { OK } );
+		} );
+	} );
+
+	app.get ( '/api/tag/bind/list', ( req: ILRequest, res: ILResponse ) => {
+		const { id_obj, module, ___errors } = typed_dict( req.query as any, [
+			{ name: "id_obj", type: "string", required: true },
+			{ name: "module", type: "string", required: true }
+		] );
+
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+
+		get_tag_bind_list ( req, id_obj, module, ( err: ILError, tags: Tag ) => {
+			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
 			send_ok( res, { tags } );

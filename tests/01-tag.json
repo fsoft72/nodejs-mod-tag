@@ -1,0 +1,186 @@
+{
+    "run-once": true,
+    "actions": [
+        {
+            "method": "POST",
+            "url": "/api/tag/admin/add",
+            "auth": true,
+            "params": {
+                "name": "test-tag",
+                "visible": true
+            },
+            "status": 200,
+            "tests": [
+                {
+                    "field": "tag.name",
+                    "value": "test-tag"
+                },
+                {
+                    "field": "tag.modules[0]",
+                    "value": "system"
+                }
+            ],
+            "fields": [
+                [
+                    "tag.id",
+                    "id_tag_01"
+                ]
+            ]
+        },
+        {
+            "method": "POST",
+            "url": "/api/tag/admin/add",
+            "auth": true,
+            "params": {
+                "name": "test-tag02",
+                "visible": true
+            },
+            "status": 200,
+            "tests": [
+                {
+                    "field": "tag.name",
+                    "value": "test-tag02"
+                },
+                {
+                    "field": "tag.modules[0]",
+                    "value": "system"
+                }
+            ],
+            "fields": [
+                [
+                    "tag.id",
+                    "id_tag_02"
+                ]
+            ]
+        },
+        {
+            "method": "GET",
+            "url": "/api/tag/admin/module/add",
+            "auth": true,
+            "params": {
+                "id": "%(id_tag_02)s",
+                "module": "test-module"
+            },
+            "tests": [
+                {
+                    "field": "tag.modules",
+                    "mode": "LEN",
+                    "value": 2
+                },
+                {
+                    "field": "tag.modules[1]",
+                    "value": "test-module"
+                }
+            ]
+        },
+        {
+            "method": "GET",
+            "url": "/api/tag/list",
+            "auth": false,
+            "tests": [
+                {
+                    "field": "tags[0].name",
+                    "value": "test-tag"
+                },
+                {
+                    "mode": "LEN",
+                    "field": "tags",
+                    "value": 2
+                }
+            ]
+        },
+        {
+            "method": "GET",
+            "url": "/api/tag/list",
+            "params": {
+                "module": "test-module"
+            },
+            "auth": false,
+            "tests": [
+                {
+                    "field": "tags[0].name",
+                    "value": "test-tag02"
+                },
+                {
+                    "mode": "LEN",
+                    "field": "tags",
+                    "value": 1
+                }
+            ]
+        },
+        {
+            "method": "GET",
+            "url": "/api/tag/admin/update",
+            "auth": true,
+            "params": {
+                "id": "%(id_tag_01)s",
+                "name": "test-tag-updated",
+                "visible": true
+            },
+            "tests": [
+                {
+                    "field": "tag.name",
+                    "mode": "EQUAL",
+                    "value": "test-tag-updated"
+                }
+            ]
+        },
+        {
+            "method": "GET",
+            "url": "/api/tag/admin/module/del",
+            "auth": true,
+            "params": {
+                "id": "%(id_tag_02)s",
+                "module": "test-module"
+            },
+            "tests": [
+                {
+                    "field": "tag.modules",
+                    "mode": "LEN",
+                    "value": 1
+                },
+                {
+                    "field": "tag.modules[0]",
+                    "value": "system"
+                }
+            ]
+        },
+        {
+            "method": "GET",
+            "url": "/api/tag/bind/add",
+            "auth": false,
+            "params": {
+                "id_tag": "%(id_tag_01)s",
+                "id_obj": "fake-id0000",
+                "module": "test-module"
+            },
+            "status": 200
+        },
+        {
+            "method": "GET",
+            "url": "/api/tag/bind/del",
+            "auth": false,
+            "params": {
+                "id_tag": "%(id_tag_01)s",
+                "id_obj": "fake-id0000",
+                "module": "test-module"
+            },
+            "status": 200
+        },
+        {
+            "method": "GET",
+            "url": "/api/tag/admin/del",
+            "auth": true,
+            "params": {
+                "id": "%(id_tag_01)s"
+            },
+            "tests": [
+                {
+                    "field": "tag",
+                    "mode": "LEN",
+                    "value": 0
+                }
+            ]
+        }
+    ]
+}

@@ -31,3 +31,22 @@ export const TagKeys = {
 	'modules': { type: 'string[]', priv: false },
 };
 
+/** TagBind */
+export interface TagBind {
+	/** Record id */
+	id: string;
+	/** Domain */
+	domain: string;
+	id_tag?: string;
+	id_obj?: string;
+	module?: string;
+}
+
+export const TagBindKeys = {
+	'id': { type: 'string', priv: false },
+	'domain': { type: 'string', priv: false },
+	'id_tag': { type: 'string', priv: false },
+	'id_obj': { type: 'string', priv: false },
+	'module': { type: 'string', priv: false },
+};
+

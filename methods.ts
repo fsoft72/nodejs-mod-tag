@@ -8,7 +8,7 @@ import { $l } from '../../liwe/locale';
 import { system_permissions_register } from '../system/methods';
 
 import {
-	Tag, TagKeys,
+	Tag, TagBind, TagBindKeys, TagKeys,
 } from './types';
 
 import _module_perms from './perms';
@@ -20,12 +20,13 @@ const _ = ( txt: string, vals: any = null, plural = false ) => {
 };
 
 const COLL_TAGS = "tags";
+const COLL_TAG_BINDINGS = "tag_bindings";
 
 /*=== f2c_start __file_header === */
 import { list_add, list_del, mkid, set_attr } from '../../liwe/utils';
 import { perm_available } from '../../liwe/auth';
 import { system_domain_get_by_session } from '../system/methods';
-import { adb_record_add, adb_find_all, adb_find_one, adb_query_all, adb_query_one, adb_prepare_filters, adb_collection_init } from '../../liwe/db/arango';
+import { adb_record_add, adb_find_all, adb_find_one, adb_query_all, adb_query_one, adb_prepare_filters, adb_collection_init, adb_del_one } from '../../liwe/db/arango';
 
 const tag_get = async ( name: string = null, id: string = null ): Promise<Tag> => {
 	const [ filters, values ] = adb_prepare_filters( 'tag', { id, name } );
@@ -44,6 +45,55 @@ const tag_create = async ( req: ILRequest, name: string, modules: string[], visi
 	tag = await adb_record_add( req.db, COLL_TAGS, tag );
 
 	return tag;
+};
+
+/**
+ *
+ * @param id_tag -  [req]
+ * @param id_obj -  [req]
+ * @param module -  [req]
+ *
+ * @return OK: boolean
+ *
+ */
+const _tag_bind_add = ( req: ILRequest, id_tag: string, id_obj: string, module: string, cback: LCback = null ): Promise<boolean> => {
+	return new Promise( async ( resolve, reject ) => {
+		/*=== f2c_start post_tag_bind_add ===*/
+		const domain = await system_domain_get_by_session( req );
+		const err: ILError = { message: 'Invalid tag or object' };
+		const bindExists = await adb_find_one( req.db, COLL_TAG_BINDINGS, { id_tag, id_obj, module, domain: domain.code } );
+		if ( bindExists )
+			return cback ? cback( null, true ) : resolve( true );
+
+		const res = await adb_record_add( req.db, COLL_TAG_BINDINGS, { id: mkid( 'tag_bind' ), domain: domain.code, id_tag, id_obj, module } );
+
+		err.message = _( 'Error adding tag binding' );
+		if ( !res ) return cback ? cback( err ) : reject( err );
+
+		return cback ? cback( null, true ) : resolve( true );
+		/*=== f2c_end post_tag_bind_add ===*/
+	} );
+};
+
+/**
+ *
+ * @param id - Binding record id [opt]
+ * @param id_tag -  [opt]
+ * @param id_obj -  [opt]
+ * @param module -  [opt]
+ *
+ * @return OK: boolean
+ *
+ */
+const _tag_bind_del = ( req: ILRequest, id_tag: string, id_obj: string, module: string, cback: LCback = null ): Promise<boolean> => {
+	return new Promise( async ( resolve, reject ) => {
+		/*=== f2c_start delete_tag_bind_del ===*/
+
+		const res = await adb_del_one( req.db, COLL_TAG_BINDINGS, { id_tag, id_obj, module } );
+
+		return cback ? cback( null, true ) : resolve( true );
+		/*=== f2c_end delete_tag_bind_del ===*/
+	} );
 };
 /*=== f2c_end __file_header ===*/
 
@@ -230,12 +280,46 @@ export const delete_tag_admin_module_del = ( req: ILRequest, id: string, module:
 export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = null ): Promise<Tag[]> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start get_tag_list ===*/
-		const domain = req?.session?.domain_code || 'default';
+		const domain = await system_domain_get_by_session( req );
 		const [ filters, values ] = adb_prepare_filters( 'tag', { domain, visible: true } ); // modules: { mode: 'm', val: module, name: 'modules' } } );
 		const tags = await adb_query_all( req.db, `FOR tag IN ${ COLL_TAGS } SORT tag.name ${ filters } RETURN tag`, values, TagKeys );
 
 		return cback ? cback( null, tags ) : resolve( tags );
 		/*=== f2c_end get_tag_list ===*/
+	} );
+};
+// }}}
+
+
+// {{{ get_tag_bind_list ( req: ILRequest, id_obj: string, module: string, cback: LCBack = null ): Promise<Tag[]>
+/**
+ *
+ * @param id_obj -  [req]
+ * @param module -  [req]
+ *
+ * @return tags: Tag
+ *
+ */
+export const get_tag_bind_list = ( req: ILRequest, id_obj: string, module: string, cback: LCback = null ): Promise<Tag[]> => {
+	return new Promise( async ( resolve, reject ) => {
+		/*=== f2c_start get_tag_bind_list ===*/
+		const err: ILError = { message: 'Error retrieving tags' };
+		const domain = await system_domain_get_by_session( req );
+		const query: string = `
+			FOR bind IN @coll_bind
+				FILTER bind.id_obj == @id_obj AND bind.module == @module AND bind.domain == @domain
+				FOR tag IN @coll_tags
+					FILTER tag.id == bind.id_tag
+					RETURN tag
+			`;
+
+		const tags = await adb_query_all( req.db, query, { id_obj, module, domain: domain.code, coll_bind: COLL_TAG_BINDINGS, coll_tags: COLL_TAGS }, TagKeys );
+
+		if ( !tags ) return cback ? cback( err ) : reject( err );
+
+		return cback ? cback( null, tags ) : resolve( tags );
+
+		/*=== f2c_end get_tag_bind_list ===*/
 	} );
 };
 // }}}
@@ -335,7 +419,7 @@ export const tag_obj = ( req: ILRequest, tags: string[], obj: any, module: strin
 		// we are going to add new tags to object
 		// if the obj already has some tags, we keep them
 		const my_tags: string[] = o?.tags ? o.tags : [];
-		await Promise.all( _tags2.map( async ( name ) => {
+		await Promise.all( _tags2.map( async ( name ): Promise<void> => {
 			// If the tag is already in the obj tags
 			// we can skip all the rest
 			if ( my_tags.indexOf( name ) != -1 ) return;
@@ -390,6 +474,12 @@ export const tag_db_init = ( liwe: ILiWE, cback: LCback = null ): Promise<boolea
 			{ type: "persistent", fields: [ "count" ], unique: false },
 			{ type: "persistent", fields: [ "visible" ], unique: false },
 			{ type: "persistent", fields: [ "modules[*]" ], unique: false },
+		], { drop: false } );
+
+		await adb_collection_init( liwe.db, COLL_TAG_BINDINGS, [
+			{ type: "persistent", fields: [ "id" ], unique: true },
+			{ type: "persistent", fields: [ "domain" ], unique: false },
+			{ type: "persistent", fields: [ "id_tag" ], unique: false },
 		], { drop: false } );
 
 		/*=== f2c_start tag_db_init ===*/
