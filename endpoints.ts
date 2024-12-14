@@ -11,8 +11,8 @@ import { perms } from '../../liwe/auth';
 
 import {
 	// endpoints function
-	delete_tag_admin_module_del, get_tag_list, get_tag_search, patch_tag_admin_fields, patch_tag_admin_update,
-	post_tag_admin_add, post_tag_admin_list, post_tag_admin_module_add,
+	delete_tag_admin_module_del, get_tag_admin_list, get_tag_list, get_tag_search, patch_tag_admin_fields,
+	patch_tag_admin_update, post_tag_admin_add, post_tag_admin_module_add,
 	// functions
 	tag_db_init, tag_obj,
 } from './methods';
@@ -32,17 +32,17 @@ export const init = ( liwe: ILiWE ) => {
 	console.log( "    - tag " );
 
 	liwe.cfg.app.languages.map( ( l ) => locale_load( "tag", l ) );
-	tag_db_init( liwe );
+	tag_db_init ( liwe );
 
-	app.post( '/api/tag/admin/add', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.post ( '/api/tag/admin/add', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
 		const { name, visible, ___errors } = typed_dict( req.body, [
 			{ name: "name", type: "string", required: true },
 			{ name: "visible", type: "boolean" }
 		] );
 
-		if ( ___errors.length ) return send_error( res, { message: `Parameters error: ${ ___errors.join( ', ' ) }` } );
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
-		post_tag_admin_add( req, name, visible, ( err: ILError, tag: Tag ) => {
+		post_tag_admin_add ( req, name, visible, ( err: ILError, tag: Tag ) => {
 			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
@@ -50,10 +50,10 @@ export const init = ( liwe: ILiWE ) => {
 		} );
 	} );
 
-	app.post( '/api/tag/admin/list', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.get ( '/api/tag/admin/list', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+		
 
-
-		post_tag_admin_list( req, ( err: ILError, tags: Tag ) => {
+		get_tag_admin_list ( req, ( err: ILError, tags: Tag ) => {
 			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
@@ -61,16 +61,16 @@ export const init = ( liwe: ILiWE ) => {
 		} );
 	} );
 
-	app.patch( '/api/tag/admin/update', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.patch ( '/api/tag/admin/update', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
 		const { id, name, visible, ___errors } = typed_dict( req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "name", type: "string" },
 			{ name: "visible", type: "boolean" }
 		] );
 
-		if ( ___errors.length ) return send_error( res, { message: `Parameters error: ${ ___errors.join( ', ' ) }` } );
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
-		patch_tag_admin_update( req, id, name, visible, ( err: ILError, tag: Tag ) => {
+		patch_tag_admin_update ( req, id, name, visible, ( err: ILError, tag: Tag ) => {
 			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
@@ -78,15 +78,15 @@ export const init = ( liwe: ILiWE ) => {
 		} );
 	} );
 
-	app.patch( '/api/tag/admin/fields', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.patch ( '/api/tag/admin/fields', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
 		const { id, data, ___errors } = typed_dict( req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "data", type: "any", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error( res, { message: `Parameters error: ${ ___errors.join( ', ' ) }` } );
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
-		patch_tag_admin_fields( req, id, data, ( err: ILError, tag: Tag ) => {
+		patch_tag_admin_fields ( req, id, data, ( err: ILError, tag: Tag ) => {
 			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
@@ -94,15 +94,15 @@ export const init = ( liwe: ILiWE ) => {
 		} );
 	} );
 
-	app.post( '/api/tag/admin/module/add', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.post ( '/api/tag/admin/module/add', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
 		const { id, module, ___errors } = typed_dict( req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "module", type: "string", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error( res, { message: `Parameters error: ${ ___errors.join( ', ' ) }` } );
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
-		post_tag_admin_module_add( req, id, module, ( err: ILError, tag: Tag ) => {
+		post_tag_admin_module_add ( req, id, module, ( err: ILError, tag: Tag ) => {
 			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
@@ -110,15 +110,15 @@ export const init = ( liwe: ILiWE ) => {
 		} );
 	} );
 
-	app.delete( '/api/tag/admin/module/del', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.delete ( '/api/tag/admin/module/del', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
 		const { id, module, ___errors } = typed_dict( req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "module", type: "string", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error( res, { message: `Parameters error: ${ ___errors.join( ', ' ) }` } );
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
-		delete_tag_admin_module_del( req, id, module, ( err: ILError, tag: Tag ) => {
+		delete_tag_admin_module_del ( req, id, module, ( err: ILError, tag: Tag ) => {
 			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
@@ -126,14 +126,14 @@ export const init = ( liwe: ILiWE ) => {
 		} );
 	} );
 
-	app.get( '/api/tag/list', ( req: ILRequest, res: ILResponse ) => {
+	app.get ( '/api/tag/list', ( req: ILRequest, res: ILResponse ) => {
 		const { module, ___errors } = typed_dict( req.query as any, [
 			{ name: "module", type: "string" }
 		] );
 
-		if ( ___errors.length ) return send_error( res, { message: `Parameters error: ${ ___errors.join( ', ' ) }` } );
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
-		get_tag_list( req, module, ( err: ILError, tags: Tag ) => {
+		get_tag_list ( req, module, ( err: ILError, tags: Tag ) => {
 			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 
@@ -141,15 +141,15 @@ export const init = ( liwe: ILiWE ) => {
 		} );
 	} );
 
-	app.get( '/api/tag/search', ( req: ILRequest, res: ILResponse ) => {
+	app.get ( '/api/tag/search', ( req: ILRequest, res: ILResponse ) => {
 		const { tags, module, ___errors } = typed_dict( req.query as any, [
 			{ name: "tags", type: "string[]", required: true },
 			{ name: "module", type: "string" }
 		] );
 
-		if ( ___errors.length ) return send_error( res, { message: `Parameters error: ${ ___errors.join( ', ' ) }` } );
+		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
-		get_tag_search( req, tags, module, ( err: ILError, objs: TagSearchResult ) => {
+		get_tag_search ( req, tags, module, ( err: ILError, objs: TagSearchResult ) => {
 			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 

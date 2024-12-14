@@ -98,7 +98,7 @@ export const post_tag_admin_add = ( req: ILRequest, name: string, visible: boole
 };
 // }}}
 
-// {{{ post_tag_admin_list ( req: ILRequest, cback: LCBack = null ): Promise<Tag[]>
+// {{{ get_tag_admin_list ( req: ILRequest, cback: LCBack = null ): Promise<Tag[]>
 /**
  *
  * List all tags in the system.
@@ -108,13 +108,13 @@ export const post_tag_admin_add = ( req: ILRequest, name: string, visible: boole
  * @return tags: Tag
  *
  */
-export const post_tag_admin_list = ( req: ILRequest, cback: LCback = null ): Promise<Tag[]> => {
+export const get_tag_admin_list = ( req: ILRequest, cback: LCback = null ): Promise<Tag[]> => {
 	return new Promise( async ( resolve, reject ) => {
-		/*=== f2c_start post_tag_admin_list ===*/
+		/*=== f2c_start get_tag_admin_list ===*/
 		const tags: Tag[] = await adb_find_all( req.db, COLL_TAGS, {}, TagKeys );
 
 		return cback ? cback( null, tags ) : resolve( tags );
-		/*=== f2c_end post_tag_admin_list ===*/
+		/*=== f2c_end get_tag_admin_list ===*/
 	} );
 };
 // }}}
@@ -263,8 +263,11 @@ export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = n
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start get_tag_list ===*/
 		const domain = await system_domain_get_by_session( req );
-		const [ filters, values ] = adb_prepare_filters( 'tag', { domain: domain.code, visible: true } ); // modules: { mode: 'm', val: module, name: 'modules' } } );
-		const tags = await adb_query_all( req.db, `FOR tag IN ${ COLL_TAGS } SORT tag.name ${ filters } RETURN tag`, values, TagKeys );
+		const conds: Record<string, any> = { domain: domain.code, visible: true };
+
+		if ( module ) conds.modules = { mode: 'a', val: [ module.toLowerCase() ], name: 'modules' };
+
+		const tags: Tag[] = await adb_find_all( req.db, COLL_TAGS, conds, TagKeys );
 
 		return cback ? cback( null, tags ) : resolve( tags );
 		/*=== f2c_end get_tag_list ===*/
@@ -285,6 +288,8 @@ export const get_tag_search = ( req: ILRequest, tags: string[], module?: string,
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start get_tag_search ===*/
 		const domain: SystemDomain = await system_domain_get_by_session( req );
+
+		if ( !tags?.map ) tags = [ tags as any ];
 
 		// gets all tags structure from db
 		const _tags: Tag[] = await adb_find_all( req.db, COLL_TAGS, {
