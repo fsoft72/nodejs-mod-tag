@@ -99,12 +99,12 @@
             "tests": [
                 {
                     "field": "tags[0].name",
-                    "value": "test-tag"
+                    "value": "test-tag02"
                 },
                 {
                     "mode": "LEN",
                     "field": "tags",
-                    "value": 2
+                    "value": 1
                 }
             ]
         },

@@ -1,7 +1,151 @@
 {
     "actions": [
         {
-            "method": "POST"
+            "title": "Creating a test obj",
+            "method": "POST",
+            "url": "/api/test/create",
+            "body": {
+                "name": "obj 1",
+                "tags": [
+                    "tag_1",
+                    "tag_2",
+                    "tag_3"
+                ]
+            },
+            "fields": [
+                [
+                    "obj.id",
+                    "id_obj_1"
+                ]
+            ],
+            "tests": [
+                {
+                    "field": "obj.tags",
+                    "mode": "LEN",
+                    "value": 3
+                }
+            ]
+        },
+        {
+            "title": "Creating a test obj n. 2",
+            "method": "POST",
+            "url": "/api/test/create",
+            "body": {
+                "name": "obj 2",
+                "tags": [
+                    "tag_3",
+                    "tag_4"
+                ]
+            },
+            "tests": [
+                {
+                    "field": "obj.tags",
+                    "mode": "LEN",
+                    "value": 2
+                }
+            ]
+        },
+        {
+            "title": "Listing all tags and checking if tag_1 and tag_4 exist (and saving tags id)",
+            "method": "GET",
+            "url": "/api/tag/admin/list",
+            "fields": [
+                [
+                    "tags.[name=tag_1].id",
+                    "id_tag_1"
+                ],
+                [
+                    "tags.[name=tag_2].id",
+                    "id_tag_2"
+                ],
+                [
+                    "tags.[name=tag_3].id",
+                    "id_tag_3"
+                ],
+                [
+                    "tags.[name=tag_4].id",
+                    "id_tag_4"
+                ]
+            ],
+            "tests": [
+                {
+                    "field": "tags.[name=tag_1]",
+                    "mode": "EXIST"
+                },
+                {
+                    "field": "tags.[name=tag_4]",
+                    "mode": "EXIST"
+                }
+            ]
+        },
+        {
+            "title": "Adding a new module to tag1",
+            "method": "POST",
+            "url": "/api/tag/admin/module/add",
+            "body": {
+                "id": "%(id_tag_1)s",
+                "module": "mod2"
+            },
+            "tests": [
+                {
+                    "field": "tag.modules",
+                    "mode": "LEN",
+                    "value": 3
+                },
+                {
+                    "field": "tag.modules[mod2]",
+                    "mode": "EXIST"
+                },
+                {
+                    "field": "tag.modules[test]",
+                    "mode": "EXIST"
+                }
+            ]
+        },
+        {
+            "title": "Search for tag tag1",
+            "method": "GET",
+            "url": "/api/tag/search",
+            "params": {
+                "tags": "tag_1"
+            },
+            "tests": [
+                {
+                    "field": "objs",
+                    "mode": "LEN",
+                    "value": 1
+                }
+            ]
+        },
+        {
+            "title": "Search for tag tag3",
+            "method": "GET",
+            "url": "/api/tag/search",
+            "params": {
+                "tags": "tag_3"
+            },
+            "tests": [
+                {
+                    "field": "objs",
+                    "mode": "LEN",
+                    "value": 2
+                }
+            ]
+        },
+        {
+            "title": "Search for tag tag4",
+            "method": "GET",
+            "url": "/api/tag/search",
+            "params": {
+                "tags": "tag_1"
+            },
+            "tests": [
+                {
+                    "field": "objs",
+                    "mode": "LEN",
+                    "value": 1
+                }
+            ]
         }
     ]
 }
