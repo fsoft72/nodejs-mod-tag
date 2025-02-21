@@ -18,8 +18,8 @@ import {
 } from './methods';
 
 import {
-	Tag, TagBind, TagBindKeys, TagKeys, TagSearchResult,
-	TagSearchResultKeys,
+	Tag, TagBase, TagBaseKeys, TagBind, TagBindKeys,
+	TagKeys, TagSearchResult, TagSearchResultKeys,
 } from './types';
 
 /*=== f2c_start __header ===*/
@@ -133,7 +133,7 @@ export const init = ( liwe: ILiWE ) => {
 
 		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
 
-		get_tag_list ( req, module, ( err: ILError, tags: Tag ) => {
+		get_tag_list ( req, module, ( err: ILError, tags: TagBase ) => {
 			if ( err?.quiet ) return;
 			if ( err ) return send_error( res, err );
 

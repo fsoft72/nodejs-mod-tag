@@ -66,3 +66,13 @@ export const TagSearchResultKeys = {
 	'module': { type: 'string', priv: false },
 };
 
+/** TagBase */
+export interface TagBase {
+	/** The tag name */
+	name?: string;
+}
+
+export const TagBaseKeys = {
+	'name': { type: 'string', priv: false },
+};
+

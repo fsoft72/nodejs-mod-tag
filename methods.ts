@@ -8,8 +8,8 @@ import { $l } from '../../liwe/locale';
 import { system_permissions_register } from '../system/methods';
 
 import {
-	Tag, TagBind, TagBindKeys, TagKeys, TagSearchResult,
-	TagSearchResultKeys,
+	Tag, TagBase, TagBaseKeys, TagBind, TagBindKeys,
+	TagKeys, TagSearchResult, TagSearchResultKeys,
 } from './types';
 
 import _module_perms from './perms';
@@ -247,7 +247,7 @@ export const delete_tag_admin_module_del = ( req: ILRequest, id: string, module:
 };
 // }}}
 
-// {{{ get_tag_list ( req: ILRequest, module?: string, cback: LCBack = null ): Promise<Tag[]>
+// {{{ get_tag_list ( req: ILRequest, module?: string, cback: LCBack = null ): Promise<TagBase[]>
 /**
  *
  * The call returns a list of all available tag.
@@ -256,10 +256,10 @@ export const delete_tag_admin_module_del = ( req: ILRequest, id: string, module:
  *
  * @param module - The name of the module to filter for [opt]
  *
- * @return tags: Tag
+ * @return tags: TagBase
  *
  */
-export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = null ): Promise<Tag[]> => {
+export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = null ): Promise<TagBase[]> => {
 	return new Promise( async ( resolve, reject ) => {
 		/*=== f2c_start get_tag_list ===*/
 		const domain = await system_domain_get_by_session( req );
@@ -267,7 +267,7 @@ export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = n
 
 		if ( module ) conds.modules = { mode: 'a', val: [ module.toLowerCase() ], name: 'modules' };
 
-		const tags: Tag[] = await adb_find_all( req.db, COLL_TAGS, conds, TagKeys );
+		const tags: Tag[] = await adb_find_all( req.db, COLL_TAGS, conds, TagBaseKeys );
 
 		return cback ? cback( null, tags ) : resolve( tags );
 		/*=== f2c_end get_tag_list ===*/
