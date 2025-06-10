@@ -68,11 +68,17 @@ export const TagSearchResultKeys = {
 
 /** TagBase */
 export interface TagBase {
+	/** The main identifier */
+	id: string;
 	/** The tag name */
 	name?: string;
+	/** The tag module */
+	module?: string;
 }
 
 export const TagBaseKeys = {
+	'id': { type: 'string', priv: false },
 	'name': { type: 'string', priv: false },
+	'module': { type: 'string', priv: false },
 };
 

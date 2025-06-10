@@ -267,7 +267,7 @@ export const get_tag_list = ( req: ILRequest, module?: string, cback: LCback = n
 
 		if ( module ) conds.modules = { mode: 'a', val: [ module.toLowerCase() ], name: 'modules' };
 
-		const tags: Tag[] = await adb_find_all( req.db, COLL_TAGS, conds, TagBaseKeys );
+		const tags: TagBase[] = await adb_find_all( req.db, COLL_TAGS, conds, TagBaseKeys );
 
 		return cback ? cback( null, tags ) : resolve( tags );
 		/*=== f2c_end get_tag_list ===*/
