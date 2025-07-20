@@ -49,29 +49,25 @@ const tag_create = async ( req: ILRequest, name: string, modules: string[], visi
 	return tag;
 };
 
-const _tag_bind_add = ( req: ILRequest, id_tag: string, id_obj: string, module: string, cback: LCback = null ): Promise<boolean> => {
-	return new Promise( async ( resolve, reject ) => {
-		const domain = await system_domain_get_by_session( req );
-		const err: ILError = { message: 'Invalid tag or object' };
-		const bindExists = await adb_find_one( req.db, COLL_TAG_BINDINGS, { id_tag, id_obj, module, domain: domain.code } );
-		if ( bindExists )
-			return responseSuccess( true );
+const _tag_bind_add = async ( req: ILRequest, err: LiWEError, id_tag: string, id_obj: string, module: string, cback: LCback = null ): Promise<boolean> => {
+	const domain = await system_domain_get_by_session( req );
+	const bindExists = await adb_find_one( req.db, COLL_TAG_BINDINGS, { id_tag, id_obj, module, domain: domain.code } );
+	if ( bindExists ) return true;
 
-		const res = await adb_record_add( req.db, COLL_TAG_BINDINGS, { id: mkid( 'tag_bind' ), domain: domain.code, id_tag, id_obj, module } );
+	const res = await adb_record_add( req.db, COLL_TAG_BINDINGS, { id: mkid( 'tag_bind' ), domain: domain.code, id_tag, id_obj, module } );
 
+	if ( !res ) {
 		err.message = _( 'Error adding tag binding' );
-		if ( !res ) return responseError( err.message );
+		return null;
+	}
 
-		return responseSuccess( true );
-	} );
+	return true;
 };
 
-const _tag_bind_del = ( req: ILRequest, id_tag: string, id_obj: string, module: string, cback: LCback = null ): Promise<boolean> => {
-	return new Promise( async ( resolve, reject ) => {
-		const res = await adb_del_all( req.db, COLL_TAG_BINDINGS, { id_tag, id_obj, module } );
+const _tag_bind_del = async ( req: ILRequest, id_tag: string, id_obj: string, module: string, cback: LCback = null ): Promise<boolean> => {
+	await adb_del_all( req.db, COLL_TAG_BINDINGS, { id_tag, id_obj, module } );
 
-		return responseSuccess( true );
-	} );
+	return true;
 };
 /*=== f2c_end __file_header ===*/
 
@@ -314,7 +310,7 @@ export const get_tag_search = async ( req: ILRequest, tags: string[], module?: s
 };
 // }}}
 
-// {{{ tag_obj ( req: ILRequest, tags: string[], obj: any, module: string, cback: LCBack = null ): Promise<any>
+// {{{ tag_obj ( req: ILRequest, err: any, tags: string[], obj: any, module?: string, cback: LCBack = null ): Promise<any>
 /**
  *
  * This function tags an object in the system.
@@ -322,21 +318,24 @@ export const get_tag_search = async ( req: ILRequest, tags: string[], module?: s
  * If one or more tag in `tags` do not exist, they will simply be skipped with no warning.
  *
  * @param req - The current request [req]
+ * @param err -  [req]
  * @param tags - A list of tags [req]
  * @param obj - The object to tag [req]
- * @param module - The module of id_obj [req]
+ * @param module - The module of id_obj [opt]
  *
  * @return : any
  *
  */
-export const tag_obj = async ( req: ILRequest, tags: string[], obj: any, module: string, ): Promise<any> => {
+export const tag_obj = async ( req: ILRequest, err: any, tags: string[], obj: any, module?: string, ): Promise<any> => {
 	/*=== f2c_start tag_obj ===*/
 	const domain: SystemDomain = await system_domain_get_by_session( req );
-	const err = { message: 'Invalid object or null object' };
 	const is_tag_admin: boolean = perm_available( req.user, [ "tag.editor" ] );
 
-	if ( !tags ) return responseSuccess( true );
-	if ( !obj ) return responseError( err.message );
+	if ( !tags ) return true;
+	if ( !obj ) {
+		err.message = _( 'Invalid object or null object' );
+		return null;
+	}
 
 	if ( !tags?.map ) tags = [ tags as any ];
 
@@ -372,7 +371,7 @@ export const tag_obj = async ( req: ILRequest, tags: string[], obj: any, module:
 			await adb_record_add( req.db, COLL_TAGS, tag );
 		}
 
-		await _tag_bind_add( req, tag.id, obj.id, module );
+		await _tag_bind_add( req, err, tag.id, obj.id, module );
 
 		my_tags.push( name );
 	} ) );
@@ -380,7 +379,7 @@ export const tag_obj = async ( req: ILRequest, tags: string[], obj: any, module:
 	// assign / overwrite the new tags to the object
 	obj.tags = my_tags;
 
-	return responseSuccess( obj );
+	return obj;
 	/*=== f2c_end tag_obj ===*/
 };
 // }}}
