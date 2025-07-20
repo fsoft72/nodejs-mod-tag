@@ -8,6 +8,7 @@ import { send_error, send_ok, typed_dict } from "../../liwe/utils";
 import { locale_load } from '../../liwe/locale';
 
 import { perms } from '../../liwe/auth';
+import { LiWEResponse, sendParametersError, sendResponse } from '../../liwe/response';
 
 import {
 	// endpoints function
@@ -34,127 +35,95 @@ export const init = ( liwe: ILiWE ) => {
 	liwe.cfg.app.languages.map( ( l ) => locale_load( "tag", l ) );
 	tag_db_init ( liwe );
 
-	app.post ( '/api/tag/admin/add', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.post ( '/api/tag/admin/add', perms( [ "tag.editor" ] ),  async ( req: ILRequest, res: ILResponse ) => {
 		const { name, visible, ___errors } = typed_dict( req.body, [
 			{ name: "name", type: "string", required: true },
 			{ name: "visible", type: "boolean" }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return sendParametersError ( res, ___errors );
 
-		post_tag_admin_add ( req, name, visible, ( err: ILError, tag: Tag ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { tag } );
-		} );
+		const response = await post_tag_admin_add ( req, name, visible);
+		sendResponse ( res, response );
 	} );
 
-	app.get ( '/api/tag/admin/list', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.get ( '/api/tag/admin/list', perms( [ "tag.editor" ] ),  async ( req: ILRequest, res: ILResponse ) => {
 		
 
-		get_tag_admin_list ( req, ( err: ILError, tags: Tag ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { tags } );
-		} );
+		const response = await get_tag_admin_list ( req, );
+		sendResponse ( res, response );
 	} );
 
-	app.patch ( '/api/tag/admin/update', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.patch ( '/api/tag/admin/update', perms( [ "tag.editor" ] ),  async ( req: ILRequest, res: ILResponse ) => {
 		const { id, name, visible, ___errors } = typed_dict( req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "name", type: "string" },
 			{ name: "visible", type: "boolean" }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return sendParametersError ( res, ___errors );
 
-		patch_tag_admin_update ( req, id, name, visible, ( err: ILError, tag: Tag ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { tag } );
-		} );
+		const response = await patch_tag_admin_update ( req, id, name, visible);
+		sendResponse ( res, response );
 	} );
 
-	app.patch ( '/api/tag/admin/fields', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.patch ( '/api/tag/admin/fields', perms( [ "tag.editor" ] ),  async ( req: ILRequest, res: ILResponse ) => {
 		const { id, data, ___errors } = typed_dict( req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "data", type: "any", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return sendParametersError ( res, ___errors );
 
-		patch_tag_admin_fields ( req, id, data, ( err: ILError, tag: Tag ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { tag } );
-		} );
+		const response = await patch_tag_admin_fields ( req, id, data);
+		sendResponse ( res, response );
 	} );
 
-	app.post ( '/api/tag/admin/module/add', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.post ( '/api/tag/admin/module/add', perms( [ "tag.editor" ] ),  async ( req: ILRequest, res: ILResponse ) => {
 		const { id, module, ___errors } = typed_dict( req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "module", type: "string", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return sendParametersError ( res, ___errors );
 
-		post_tag_admin_module_add ( req, id, module, ( err: ILError, tag: Tag ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { tag } );
-		} );
+		const response = await post_tag_admin_module_add ( req, id, module);
+		sendResponse ( res, response );
 	} );
 
-	app.delete ( '/api/tag/admin/module/del', perms( [ "tag.editor" ] ), ( req: ILRequest, res: ILResponse ) => {
+	app.delete ( '/api/tag/admin/module/del', perms( [ "tag.editor" ] ),  async ( req: ILRequest, res: ILResponse ) => {
 		const { id, module, ___errors } = typed_dict( req.body, [
 			{ name: "id", type: "string", required: true },
 			{ name: "module", type: "string", required: true }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return sendParametersError ( res, ___errors );
 
-		delete_tag_admin_module_del ( req, id, module, ( err: ILError, tag: Tag ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { tag } );
-		} );
+		const response = await delete_tag_admin_module_del ( req, id, module);
+		sendResponse ( res, response );
 	} );
 
-	app.get ( '/api/tag/list', ( req: ILRequest, res: ILResponse ) => {
+	app.get ( '/api/tag/list',  async ( req: ILRequest, res: ILResponse ) => {
 		const { module, ___errors } = typed_dict( req.query as any, [
 			{ name: "module", type: "string" }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return sendParametersError ( res, ___errors );
 
-		get_tag_list ( req, module, ( err: ILError, tags: TagBase ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { tags } );
-		} );
+		const response = await get_tag_list ( req, module);
+		sendResponse ( res, response );
 	} );
 
-	app.get ( '/api/tag/search', ( req: ILRequest, res: ILResponse ) => {
+	app.get ( '/api/tag/search',  async ( req: ILRequest, res: ILResponse ) => {
 		const { tags, module, ___errors } = typed_dict( req.query as any, [
 			{ name: "tags", type: "string[]", required: true },
 			{ name: "module", type: "string" }
 		] );
 
-		if ( ___errors.length ) return send_error ( res, { message: `Parameters error: ${___errors.join ( ', ' )}` } );
+		if ( ___errors.length ) return sendParametersError ( res, ___errors );
 
-		get_tag_search ( req, tags, module, ( err: ILError, objs: TagSearchResult ) => {
-			if ( err?.quiet ) return;
-			if ( err ) return send_error( res, err );
-
-			send_ok( res, { objs } );
-		} );
+		const response = await get_tag_search ( req, tags, module);
+		sendResponse ( res, response );
 	} );
 
 };
